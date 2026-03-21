@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Form, Response, Cookie
+from fastapi import FastAPI, Query, Form, Response, Cookie, HTTPException, status
 from models import UserCreate
 from data import sample_products, users_db
 from uuid import uuid4
@@ -31,12 +31,12 @@ def login(response : Response, username : str = Form(...), password : str = Form
     for user in users_db:
         if user.get("username") == username and user.get("password") == password:
             response.set_cookie(key="session_cookie", value=user.get("user_id"), httponly=True)
-            return {"message" : "cookie has been set"}
-    return {"error" : "Invalid credentials!"}
+            return {"session_cookie" : user.get("user_id")}
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
 @app.get("/user")
 async def get_user(session_cookie = Cookie()):
     for user in users_db:
         if str(user.get("user_id")) == session_cookie:
             return {"username": user.get("username")}
-    return {"message": "Unauthorized"}
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")

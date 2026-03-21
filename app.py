@@ -26,21 +26,17 @@ def search_products(keyword : str, category : str = Query(default=None), limit :
     return res
 
 # task 5.1
-current_user = {}
-
 @app.post("/login")
 def login(response : Response, username : str = Form(...), password : str = Form(...)):
     for user in users_db:
-        if user["username"] == username and user["password"] == password:
-            current_user["session_cookie"] = uuid4()
-            current_user["data"] = user
-            response.set_cookie(key="session_cookie", value=current_user["session_cookie"], httponly=True)
+        if user.get("username") == username and user.get("password") == password:
+            response.set_cookie(key="session_cookie", value=user.get("user_id"), httponly=True)
             return {"message" : "cookie has been set"}
     return {"error" : "Invalid credentials!"}
 
 @app.get("/user")
 async def get_user(session_cookie = Cookie()):
-    print(type(session_cookie), type(str(current_user.get("session_cookie"))))
-    if str(current_user.get("session_cookie")) == session_cookie:
-        return {"user": current_user.get("data")}
+    for user in users_db:
+        if str(user.get("user_id")) == session_cookie:
+            return {"username": user.get("username")}
     return {"message": "Unauthorized"}

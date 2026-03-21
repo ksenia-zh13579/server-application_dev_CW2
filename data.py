@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 sample_product_1 = {
     "product_id": 123,
     "name": "Smartphone",
@@ -37,6 +39,7 @@ sample_products = [sample_product_1, sample_product_2, sample_product_3, sample_
 
 users_db = [
     {
+        "user_id": uuid4(),
         "username": "user1",
         "password": "password1",
     }

@@ -37,10 +37,11 @@ def login(response : Response, username : str = Form(...), password : str = Form
             confirmation_token = token_serializer.dumps(user.get("user_id"))
             response.set_cookie(key="session_cookie", value=confirmation_token, httponly=True, max_age=60)
             return {"session_cookie" : confirmation_token}
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    response.status_code = 401
+    return {"message": "Unauthorized"}
 
 @app.get("/user")
-async def get_user(session_cookie : str | None = Cookie(default=None)):
+async def get_user(response: Response, session_cookie : str | None = Cookie(default=None)):
     for user in users_db:
         token_serializer = URLSafeTimedSerializer(secret_key=SECRET_KEY)
         try:
@@ -48,5 +49,7 @@ async def get_user(session_cookie : str | None = Cookie(default=None)):
             if user.get("user_id") == data:
                 return {"username": user.get("username")}
         except:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+            response.status_code = 401
+            return {"message": "Unauthorized"}
+    response.status_code = 401
+    return {"message": "Unauthorized"}

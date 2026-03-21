@@ -39,7 +39,7 @@ sample_products = [sample_product_1, sample_product_2, sample_product_3, sample_
 
 users_db = [
     {
-        "user_id": uuid4(),
+        "user_id": str(uuid4()),
         "username": "user1",
         "password": "password1",
     }

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query, Form, Response, Cookie, HTTPException, statu
 from models import UserCreate
 from data import sample_products, users_db
 from uuid import uuid4
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 
 app = FastAPI()
 
@@ -25,18 +26,27 @@ def search_products(keyword : str, category : str = Query(default=None), limit :
             res.append(product)
     return res
 
-# task 5.1
+# task 5.1 - 5.2
+SECRET_KEY = "superduperultrasecretkey"
+
 @app.post("/login")
 def login(response : Response, username : str = Form(...), password : str = Form(...)):
     for user in users_db:
         if user.get("username") == username and user.get("password") == password:
-            response.set_cookie(key="session_cookie", value=user.get("user_id"), httponly=True)
-            return {"session_cookie" : user.get("user_id")}
+            token_serializer = URLSafeTimedSerializer(secret_key=SECRET_KEY)
+            confirmation_token = token_serializer.dumps(user.get("user_id"))
+            response.set_cookie(key="session_cookie", value=confirmation_token, httponly=True, max_age=60)
+            return {"session_cookie" : confirmation_token}
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
 @app.get("/user")
-async def get_user(session_cookie = Cookie()):
+async def get_user(session_cookie : str | None = Cookie(default=None)):
     for user in users_db:
-        if str(user.get("user_id")) == session_cookie:
-            return {"username": user.get("username")}
+        token_serializer = URLSafeTimedSerializer(secret_key=SECRET_KEY)
+        try:
+            data = token_serializer.loads(session_cookie, max_age=60)
+            if user.get("user_id") == data:
+                return {"username": user.get("username")}
+        except:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")

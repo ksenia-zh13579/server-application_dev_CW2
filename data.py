@@ -34,3 +34,10 @@ sample_product_5 = {
 }
 
 sample_products = [sample_product_1, sample_product_2, sample_product_3, sample_product_4, sample_product_5]
+
+users_db = [
+    {
+        "username": "user1",
+        "password": "password1",
+    }
+]
